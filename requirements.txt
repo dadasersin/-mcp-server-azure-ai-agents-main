@@ -24,7 +24,6 @@ azure-identity==1.20.0
 azure-mgmt-core==1.5.0
 azure-mgmt-resource==23.2.0
 azure-search-documents==11.6.0b10
--e git+https://github.com/farzad528/mcp-server-azure-ai-search.git@7d4ce398bf3f1ef98e743d4faf5e7942bd2eb305#egg=azure_search_mcp
 babel==2.17.0
 beautifulsoup4==4.13.3
 bidict==0.23.1

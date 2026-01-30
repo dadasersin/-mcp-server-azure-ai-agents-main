@@ -1,4 +1,7 @@
-FROM n8nio/n8n:latest
+FROM n8nio/n8n:latest-alpine
+
+ENV N8N_PORT=5678
+EXPOSE 5678
 
 USER root
 

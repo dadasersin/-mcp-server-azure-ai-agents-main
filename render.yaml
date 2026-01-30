@@ -1,0 +1,58 @@
+services:
+  - type: web
+    name: n8n
+    env: docker
+    plan: starter
+    region: frankfurt
+    disk:
+      name: n8n-data
+      mountPath: /home/node/.n8n
+      sizeGB: 10
+    envVars:
+      - key: N8N_HOST
+        fromService:
+          type: web
+          name: n8n
+          property: host
+      - key: N8N_PORT
+        value: 5678
+      - key: N8N_PROTOCOL
+        value: https
+      - key: NODE_ENV
+        value: production
+      - key: WEBHOOK_URL
+        placeholder: "https://your-app-name.onrender.com/"
+      - key: DB_TYPE
+        value: postgresdb
+      - key: DB_POSTGRESDB_HOST
+        fromDatabase:
+          name: n8n-db
+          property: host
+      - key: DB_POSTGRESDB_PORT
+        fromDatabase:
+          name: n8n-db
+          property: port
+      - key: DB_POSTGRESDB_DATABASE
+        fromDatabase:
+          name: n8n-db
+          property: database
+      - key: DB_POSTGRESDB_USER
+        fromDatabase:
+          name: n8n-db
+          property: user
+      - key: DB_POSTGRESDB_PASSWORD
+        fromDatabase:
+          name: n8n-db
+          property: password
+      - key: GITHUB_REPO_URL
+        placeholder: "https://github.com/user/repo.git"
+      - key: GITHUB_TOKEN
+        placeholder: "ghp_your_personal_access_token"
+      - key: GITHUB_EMAIL
+        placeholder: "your-email@example.com"
+      - key: N8N_ENCRYPTION_KEY
+        generateValue: true
+
+databases:
+  - name: n8n-db
+    plan: free # Note: Render Free databases expire after 30 days. Recommend 'Starter' for production.

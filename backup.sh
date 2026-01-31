@@ -1,13 +1,24 @@
 #!/bin/sh
 
-# Wait for n8n to start and create necessary files
+# Wait for n8n to start
+echo "Waiting for n8n to start before importing workflows..."
 sleep 60
 
-# One-time copy of initial workflows to the backup folder if it's empty
+# One-time import of initial workflows into n8n database
+if [ -d "/home/node/initial-workflows" ] && [ ! -f "/home/node/.n8n/initial_imported.txt" ]; then
+  echo "Importing initial workflows into n8n..."
+  for f in /home/node/initial-workflows/*.json; do
+    echo "Importing $f..."
+    n8n import:workflow --input="$f"
+  done
+  touch /home/node/.n8n/initial_imported.txt
+fi
+
+# One-time copy to backup folder for git tracking
 if [ -d "/home/node/initial-workflows" ] && [ ! -f "/home/node/.n8n/backups/initial_loaded.txt" ]; then
-  echo "Loading initial workflows into backup folder..."
+  echo "Copying initial workflows to backup folder..."
   mkdir -p /home/node/.n8n/backups
-  cp /home/node/initial-workflows/* /home/node/.n8n/backups/
+  cp /home/node/initial-workflows/*.json /home/node/.n8n/backups/
   touch /home/node/.n8n/backups/initial_loaded.txt
 fi
 
@@ -15,20 +26,13 @@ while true; do
   echo "--- Starting Automated Backup to GitHub ---"
 
   if [ -z "$GITHUB_REPO_URL" ] || [ -z "$GITHUB_TOKEN" ] || [ -z "$GITHUB_EMAIL" ]; then
-    echo "ERROR: Backup environment variables (GITHUB_REPO_URL, GITHUB_TOKEN, GITHUB_EMAIL) are not set."
-    echo "Skipping backup for this cycle."
+    echo "NOTICE: Backup environment variables (GITHUB_REPO_URL, GITHUB_TOKEN, GITHUB_EMAIL) are not set."
+    echo "To enable GitHub backups, please set these variables in your Render dashboard."
   else
-    # Export workflows and credentials using n8n CLI
-    # We use a temp directory to avoid git conflicts during export
     mkdir -p /home/node/.n8n/backups
 
     echo "Exporting workflows..."
     n8n export:workflow --all --output=/home/node/.n8n/backups/workflows.json
-
-    # Credentials are NOT exported by default for security.
-    # To include them, uncomment the lines below, but BE CAREFUL with your repository privacy.
-    # echo "Exporting credentials..."
-    # n8n export:credentials --all --output=/home/node/.n8n/backups/credentials.json
 
     cd /home/node/.n8n/backups
 
@@ -40,9 +44,6 @@ while true; do
       git branch -M main
     fi
 
-    # Update origin with token if necessary
-    # Extract domain and path from GITHUB_REPO_URL
-    # Expected: https://github.com/user/repo.git
     CLEAN_URL=$(echo $GITHUB_REPO_URL | sed 's|https://||')
     AUTH_URL="https://${GITHUB_TOKEN}@${CLEAN_URL}"
 
@@ -62,6 +63,6 @@ while true; do
     fi
   fi
 
-  echo "Next backup in 5 minutes..."
+  echo "Next backup cycle in 5 minutes..."
   sleep 300
 done

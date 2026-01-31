@@ -5,8 +5,8 @@ EXPOSE 5678
 
 USER root
 
-# Install git for backups
-RUN apk add --no-cache git openssh-client
+# Install git, openssh, and su-exec for backup and permission management
+RUN apk add --no-cache git openssh-client su-exec
 
 # Create directory for backups and set permissions
 RUN mkdir -p /home/node/.n8n/backups /home/node/initial-workflows && \
@@ -17,13 +17,9 @@ COPY initial-workflows /home/node/initial-workflows
 COPY backup.sh /usr/local/bin/backup.sh
 RUN chmod +x /usr/local/bin/backup.sh
 
-USER node
-
 # Setup n8n and backup script to run together
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
-# USER root again to make entrypoint executable then back to node
-USER root
 RUN chmod +x /usr/local/bin/entrypoint.sh
-USER node
 
+# Run as root to allow chown in entrypoint, then entrypoint will switch to node user
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

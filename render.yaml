@@ -51,7 +51,7 @@ services:
       - key: GITHUB_EMAIL
         placeholder: "your-email@example.com"
       - key: N8N_ENCRYPTION_KEY
-        generateValue: true
+        generateValue: true # This key will be generated once and persist across restarts.
 
 databases:
   - name: n8n-db
